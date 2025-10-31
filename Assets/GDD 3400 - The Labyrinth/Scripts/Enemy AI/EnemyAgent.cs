@@ -36,6 +36,8 @@ namespace GDD3400.Labyrinth
         List<PathNode> _path;
 
         private Rigidbody _rb;
+        //[SerializeField] private CapsuleCollider agentCollider;
+        //public Collider AgentCollider => agentCollider;
 
         private LayerMask _wallLayer;
 
@@ -49,6 +51,9 @@ namespace GDD3400.Labyrinth
 
             // Grab and store the wall layer
             _wallLayer = LayerMask.GetMask("Walls");
+
+            //// If collider is not set, set it
+            //if (agentCollider == null) agentCollider = transform.Find("Collider").GetComponent<CapsuleCollider>();
         }
 
         public void Start()
