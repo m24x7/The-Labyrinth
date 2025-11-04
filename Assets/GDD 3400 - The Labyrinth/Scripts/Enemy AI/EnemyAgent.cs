@@ -19,7 +19,9 @@ namespace GDD3400.Labyrinth
 
         // Scripts
         [SerializeField] private EnemyMovement Movement;
+        [SerializeField] private EnemyPerception Perception;
 
+        // Movement Settings
         [SerializeField] public float _TurnRate = 10f;
         [SerializeField] public float _MaxSpeed = 5f;
         [SerializeField] public float _SightDistance = 25f;
@@ -32,15 +34,16 @@ namespace GDD3400.Labyrinth
         [Tooltip("The minimum distance to the destination before we start using the pathfinder")]
         [SerializeField] public float _MinimumPathDistance = 6f;
 
-        private Vector3 _velocity;
-        private Vector3 _floatingTarget;
-        private Vector3 _destinationTarget;
+        // Movement Vars
+        [SerializeField] private Vector3 _velocity;
+        [SerializeField] private Vector3 _floatingTarget;
+        [SerializeField] private Vector3 _destinationTarget;
         List<PathNode> _path;
 
         private Rigidbody _rb;
 
-        //[SerializeField] private CapsuleCollider agentCollider;
-        //public Collider AgentCollider => agentCollider;
+        [SerializeField] private CapsuleCollider agentCollider;
+        public Collider AgentCollider => agentCollider;
 
         private LayerMask _wallLayer;
 
@@ -52,13 +55,15 @@ namespace GDD3400.Labyrinth
             // Grab and store the rigidbody component
             _rb = GetComponent<Rigidbody>();
 
+            // Grab and store agent modules
             Movement = GetComponent<EnemyMovement>();
+            Perception = GetComponent<EnemyPerception>();
 
             // Grab and store the wall layer
             _wallLayer = LayerMask.GetMask("Walls");
 
-            //// If collider is not set, set it
-            //if (agentCollider == null) agentCollider = transform.Find("Collider").GetComponent<CapsuleCollider>();
+            // If collider is not set, set it
+            if (agentCollider == null) agentCollider = transform.Find("Collider").GetComponent<CapsuleCollider>();
         }
 
         public void Start()
@@ -68,19 +73,16 @@ namespace GDD3400.Labyrinth
 
             // If we still don't have a level manager, throw an error
             if (_levelManager == null) Debug.LogError("Unable To Find Level Manager");
+
+            // Start Enemy Line of Sight Routine
+            StartCoroutine(Perception.FindTargetsWithDelay(0.2f));
         }
 
         public void Update()
         {
             if (!_isActive) return;
 
-            Perception();
             DecisionMaking();
-        }
-
-        private void Perception()
-        {
-            // TODO: Implement perception            
         }
 
         private void DecisionMaking()
@@ -111,15 +113,19 @@ namespace GDD3400.Labyrinth
 
             _velocity = Movement.GetNewAgentVelocity(_floatingTarget, _StoppingDistance, _velocity,
                 _MaxSpeed);
-
-            Movement.RotateAgent(_velocity, _TurnRate);
+            Debug.Log($"Agent Velocity: {_velocity}");
+            if (_velocity != Vector3.zero) Movement.RotateAgent(_velocity, _TurnRate);
 
             _rb.linearVelocity = _velocity;
         }
         #endregion
 
 
-
+        #region Movement Utils
+        /// <summary>
+        /// This method sets the destination target for the enemy agent
+        /// </summary>
+        /// <param name="destination"></param>
         public void SetDestinationTarget(Vector3 destination)
         {
             Movement.SetDestinationTarget(_path, destination, _MinimumPathDistance, _levelManager,
@@ -131,5 +137,6 @@ namespace GDD3400.Labyrinth
 
             if (newPath != null) _path = newPath;
         }
+        #endregion
     }
 }

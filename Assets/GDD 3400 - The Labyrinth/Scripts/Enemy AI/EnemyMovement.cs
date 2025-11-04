@@ -4,28 +4,25 @@ using UnityEngine;
 
 namespace GDD3400.Labyrinth
 {
+    /// <summary>
+    /// This class handles enemy movement logic
+    /// </summary>
+    [RequireComponent(typeof(EnemyAgent))]
     public class EnemyMovement : MonoBehaviour
     {
-        //// Start is called once before the first execution of Update after the MonoBehaviour is created
-        //void Start()
-        //{
-        
-        //}
-
-        //// Update is called once per frame
-        //void Update()
-        //{
-        
-        //}
-
-        //public void SetUp()
-        //{
-        //    // Setup movement parameters
-        //}
+        private void FixedUpdate()
+        {
+            // Reset angular velocity to prevent physics interference
+            if (GetComponent<Rigidbody>() != null) GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+        }
 
         #region Path Following
 
-        // Perform path following
+        /// <summary>
+        /// This method performs path following
+        /// </summary>
+        /// <param name="_path"></param>
+        /// <param name="_floatingTarget"></param>
         public void PathFollowing(List<PathNode> _path, out Vector3 _floatingTarget)
         {
             int closestNodeIndex = GetClosestNode(_path);
@@ -45,7 +42,16 @@ namespace GDD3400.Labyrinth
             _floatingTarget = targetNode.transform.position;
         }
 
-        // Public method to set the destination target
+        /// <summary>
+        /// This public method sets the destination target
+        /// </summary>
+        /// <param name="_path"></param>
+        /// <param name="destination"></param>
+        /// <param name="_MinimumPathDistance"></param>
+        /// <param name="_levelManager"></param>
+        /// <param name="_destinationTarget"></param>
+        /// <param name="_floatingTarget"></param>
+        /// <param name="newPath"></param>
         public void SetDestinationTarget(List<PathNode> _path, Vector3 destination, float _MinimumPathDistance, LevelManager _levelManager,
             out Vector3 _destinationTarget, out Vector3 _floatingTarget, out List<PathNode> newPath)
         {
@@ -79,7 +85,11 @@ namespace GDD3400.Labyrinth
             }
         }
 
-        // Get the closest node to the player's current position
+        /// <summary>
+        /// This method gets the closest node to the player's current position
+        /// </summary>
+        /// <param name="_path"></param>
+        /// <returns></returns>
         private int GetClosestNode(List<PathNode> _path)
         {
             int closestNodeIndex = 0;
@@ -97,6 +107,11 @@ namespace GDD3400.Labyrinth
             return closestNodeIndex;
         }
 
+        /// <summary>
+        /// This coroutine draws debug lines between the nodes in the path.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         private IEnumerator DrawPathDebugLines(List<PathNode> path)
         {
             for (int i = 0; i < path.Count - 1; i++)
@@ -108,6 +123,14 @@ namespace GDD3400.Labyrinth
         #endregion
 
         #region Move Agent
+        /// <summary>
+        /// This method calculates a new velocity for the agent to move towards a floating target.
+        /// </summary>
+        /// <param name="_floatingTarget"></param>
+        /// <param name="_StoppingDistance"></param>
+        /// <param name="curVelocity"></param>
+        /// <param name="_MaxSpeed"></param>
+        /// <returns></returns>
         public Vector3 GetNewAgentVelocity(Vector3 _floatingTarget, float _StoppingDistance, Vector3 curVelocity, float _MaxSpeed)
         {
             // If we have a floating target and we are not close enough to it, move towards it
@@ -120,19 +143,36 @@ namespace GDD3400.Labyrinth
                 return curVelocity = direction * _MaxSpeed;
             }
 
-            // If we are close enough to the floating target, slow down
+            // If we are close enough to the floating target, slow down or stop
             else
             {
+                // Stop if within a small threshold
+                if (curVelocity.magnitude < 0.1f)
+                {
+                    return Vector3.zero;
+                }
+
+                // Gradually reduce the velocity to simulate slowing down
                 return curVelocity *= .95f;
             }
         }
 
+        /// <summary>
+        /// This method rotates the agent to face the direction of its velocity.
+        /// </summary>
+        /// <param name="_velocity"></param>
+        /// <param name="_TurnRate"></param>
         public void RotateAgent(Vector3 _velocity, float _TurnRate)
         {
-            // Calculate the desired rotation towards the movement vector
-            if (_velocity != Vector3.zero)
+            //Debug.Log($"Rotating Agent with Velocity: {_velocity}");
+
+            // Only rotate if we have a significant velocity
+            if (_velocity == Vector3.zero || _velocity.magnitude < 0.1f) return;
+            else
             {
+                // Calculate the desired rotation towards the movement vector
                 Quaternion targetRotation = Quaternion.LookRotation(_velocity);
+                Debug.Log($"Target Rotation: {targetRotation.eulerAngles}");
 
                 // Smoothly rotate towards the target rotation based on the turn rate
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _TurnRate);

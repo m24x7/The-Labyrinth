@@ -5,6 +5,9 @@ using UnityEngine.InputSystem;
 
 namespace  GDD3400.Labyrinth
 {
+    /// <summary>
+    /// This class handles player movement and actions
+    /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class PlayerController : MonoBehaviour
     {
@@ -77,51 +80,24 @@ namespace  GDD3400.Labyrinth
 
             // Apply the movement force
             _rigidbody.AddForce(_moveVector * curMoveSpeed * 4f, ForceMode.Force);
-
-            // Add the dash force
-            //if (_performDash)
-            //{
-            //    _rigidbody.AddForce(transform.forward * _DashDistance * 5f, ForceMode.Impulse);
-            //    _performDash = false;
-            //}
         }
 
-        //private void PerformDash()
-        //{
-        //    _performDash = true;
-        //    _isDashing = true;
-
-        //    // Call reset after the cooldown
-        //    Invoke("ResetDash", _DashCooldown);
-        //}
-
-        //private void IsDashing()
-        //{
-        //    // Make invulnurable when dashing
-        //}
-
-        //private void ResetDash()
-        //{
-        //    _isDashing = false;
-        //    _rigidbody.linearVelocity = _moveVector * _MoveSpeed;
-        //}
-
-
+        /// <summary>
+        /// This method assigns input action variables
+        /// </summary>
         private void AssignInputVars()
         {
             _moveAction = InputSystem.actions.FindAction("Move");
-            //_dashAction = InputSystem.actions.FindAction("Dash");
             sprintAction = InputSystem.actions.FindAction("Sprint");
             sneakAction = InputSystem.actions.FindAction("Sneak");
             useDistractionAction = InputSystem.actions.FindAction("UseDistraction");
         }
 
+        /// <summary>
+        /// This method assigns default values to movement-related variables
+        /// </summary>
         private void AssignMovementVarDefaults()
         {
-            // Set dash vars to default vals
-            //_performDash = false;
-            //_isDashing = false;
-
             // Set move vars to default vals
             isSprinting = false;
             isSneaking = false;

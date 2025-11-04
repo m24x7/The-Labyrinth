@@ -9,6 +9,14 @@ namespace GDD3400.Labyrinth
     /// </summary>
     public static class SoundNotif
     {
+        /// <summary>
+        /// This method collects all colliders within a sound radius
+        /// </summary>
+        /// <param name="soundCenter"></param>
+        /// <param name="soundRadius"></param>
+        /// <param name="hitMask"></param>
+        /// <param name="collectedColliders"></param>
+        /// <returns></returns>
         public static bool TryCollectColliders(Vector3 soundCenter, float soundRadius, LayerMask hitMask, out Collider[] collectedColliders)
         {
             Collider[] hitColliders = Physics.OverlapSphere(soundCenter, soundRadius, hitMask);
@@ -23,6 +31,12 @@ namespace GDD3400.Labyrinth
             return true;
         }
 
+        /// <summary>
+        /// This method converts an array of colliders to an array of game objects
+        /// </summary>
+        /// <param name="colliders"></param>
+        /// <param name="collectedObjects"></param>
+        /// <returns></returns>
         public static bool TryCollidersToGameObjects(Collider[] colliders, out GameObject[] collectedObjects)
         {
             collectedObjects = null;
