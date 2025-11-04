@@ -36,20 +36,9 @@ namespace  GDD3400.Labyrinth
             // Assign member variables
             _rigidbody = GetComponent<Rigidbody>();
 
-            _moveAction = InputSystem.actions.FindAction("Move");
-            //_dashAction = InputSystem.actions.FindAction("Dash");
-            sprintAction = InputSystem.actions.FindAction("Sprint");
-            sneakAction = InputSystem.actions.FindAction("Sneak");
-            useDistractionAction = InputSystem.actions.FindAction("UseDistraction");
+            AssignInputVars();
 
-            // Set dash vars to default vals
-            //_performDash = false;
-            //_isDashing = false;
-
-            // Set move vars to default vals
-            isSprinting = false;
-            isSneaking = false;
-            curMoveSpeed = BaseMoveSpeed;
+            AssignMovementVarDefaults();
         }
 
         private void Update()
@@ -116,5 +105,27 @@ namespace  GDD3400.Labyrinth
         //    _isDashing = false;
         //    _rigidbody.linearVelocity = _moveVector * _MoveSpeed;
         //}
+
+
+        private void AssignInputVars()
+        {
+            _moveAction = InputSystem.actions.FindAction("Move");
+            //_dashAction = InputSystem.actions.FindAction("Dash");
+            sprintAction = InputSystem.actions.FindAction("Sprint");
+            sneakAction = InputSystem.actions.FindAction("Sneak");
+            useDistractionAction = InputSystem.actions.FindAction("UseDistraction");
+        }
+
+        private void AssignMovementVarDefaults()
+        {
+            // Set dash vars to default vals
+            //_performDash = false;
+            //_isDashing = false;
+
+            // Set move vars to default vals
+            isSprinting = false;
+            isSneaking = false;
+            curMoveSpeed = BaseMoveSpeed;
+        }
     }
 }

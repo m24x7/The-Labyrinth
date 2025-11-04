@@ -7,15 +7,9 @@ namespace GDD3400.Labyrinth
     /// <summary>
     /// This class is used to notify agents of created sounds.
     /// </summary>
-    public class SoundNotif
+    public static class SoundNotif
     {
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
-        void Start()
-        {
-        
-        }
-
-        public bool CollectColliders(Vector3 soundCenter, float soundRadius, LayerMask hitMask, out Collider[] collectedColliders)
+        public static bool TryCollectColliders(Vector3 soundCenter, float soundRadius, LayerMask hitMask, out Collider[] collectedColliders)
         {
             Collider[] hitColliders = Physics.OverlapSphere(soundCenter, soundRadius, hitMask);
 
@@ -29,7 +23,7 @@ namespace GDD3400.Labyrinth
             return true;
         }
 
-        public bool CollectGameObjects(Collider[] colliders, out GameObject[] collectedObjects)
+        public static bool TryCollidersToGameObjects(Collider[] colliders, out GameObject[] collectedObjects)
         {
             collectedObjects = null;
             if (colliders == null || colliders.Length == 0)
