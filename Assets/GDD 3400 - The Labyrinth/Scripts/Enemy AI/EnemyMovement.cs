@@ -55,14 +55,14 @@ namespace GDD3400.Labyrinth
         public void SetDestinationTarget(List<PathNode> _path, Vector3 destination, float _MinimumPathDistance, LevelManager _levelManager,
             out Vector3 _destinationTarget, out Vector3 _floatingTarget, out List<PathNode> newPath)
         {
-            Debug.Log("Destination: " + destination);
+            //Debug.Log("Destination: " + destination);
 
             _destinationTarget = destination;
             _floatingTarget = new Vector3();
             newPath = null;
 
             // If the straight line distance is greater than our minimum, Lets do pathfinding!
-            if (Vector3.Distance(transform.position, _destinationTarget) > _MinimumPathDistance)
+            if (Vector3.Distance(transform.position, _destinationTarget) >= _MinimumPathDistance)
             {
                 PathNode startNode = _levelManager.GetNode(transform.position);
                 PathNode endNode = _levelManager.GetNode(destination);
@@ -75,6 +75,8 @@ namespace GDD3400.Labyrinth
 
                 newPath = Pathfinder.FindPath(startNode, endNode);
 
+                newPath = SmoothPath(newPath);
+
                 StartCoroutine(DrawPathDebugLines(newPath));
             }
 
@@ -83,6 +85,39 @@ namespace GDD3400.Labyrinth
             {
                 _floatingTarget = _destinationTarget;
             }
+        }
+
+        /// <summary>
+        /// This method smooths the given path by removing unnecessary nodes
+        /// </summary>
+        /// <param name="curPath"></param>
+        /// <returns></returns>
+        public List<PathNode> SmoothPath(List<PathNode> curPath)
+        {
+            if (curPath == null || curPath.Count < 3) return curPath;
+
+            List<PathNode> smoothedPath = new List<PathNode>();
+            smoothedPath.Add(curPath[0]);
+
+            int currentIndex = 2;
+
+            while (currentIndex < curPath.Count)
+            {
+                PathNode lastAddedNode = smoothedPath[smoothedPath.Count - 1];
+                PathNode currentNode = curPath[currentIndex];
+
+                if (!Physics.Linecast(lastAddedNode.transform.position + Vector3.up,
+                    currentNode.transform.position + Vector3.up,
+                    LayerMask.NameToLayer("Walls"),
+                    QueryTriggerInteraction.Ignore))
+                {
+                    smoothedPath.Add(curPath[currentIndex - 1]);
+                }
+                currentIndex++;
+            }
+
+            smoothedPath.Add(curPath[curPath.Count - 1]);
+            return smoothedPath;
         }
 
         /// <summary>
@@ -172,7 +207,7 @@ namespace GDD3400.Labyrinth
             {
                 // Calculate the desired rotation towards the movement vector
                 Quaternion targetRotation = Quaternion.LookRotation(_velocity);
-                Debug.Log($"Target Rotation: {targetRotation.eulerAngles}");
+                //Debug.Log($"Target Rotation: {targetRotation.eulerAngles}");
 
                 // Smoothly rotate towards the target rotation based on the turn rate
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _TurnRate);

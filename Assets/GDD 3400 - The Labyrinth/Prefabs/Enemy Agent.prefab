@@ -177,6 +177,8 @@ GameObject:
   - component: {fileID: 8066450295968295882}
   - component: {fileID: 3555295418026724885}
   - component: {fileID: 5424826193532243022}
+  - component: {fileID: 7071159716494295471}
+  - component: {fileID: 1149456251284987109}
   - component: {fileID: 7818464875794925198}
   - component: {fileID: 7949022131313506616}
   m_Layer: 8
@@ -216,8 +218,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _levelManager: {fileID: 0}
-  Movement: {fileID: 0}
-  Perception: {fileID: 0}
+  Movement: {fileID: 7818464875794925198}
+  Perception: {fileID: 5424826193532243022}
+  Decision: {fileID: 7071159716494295471}
+  Actions: {fileID: 1149456251284987109}
   _TurnRate: 10
   _MaxSpeed: 5
   _SightDistance: 25
@@ -250,6 +254,34 @@ MonoBehaviour:
     m_Bits: 512
   visibleTargets: []
   closeObstacles: []
+  heardNoisePos: {x: 0, y: 0, z: 0}
+--- !u!114 &7071159716494295471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942046151403193595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d3030cce8ddae648b135a704c6cc4be, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canSeePlayer: 0
+  heardNoise: 0
+  isAtLastKnownTargetPosition: 0
+--- !u!114 &1149456251284987109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6942046151403193595}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57892f129c20648479b43862a0d935b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &7818464875794925198
 MonoBehaviour:
   m_ObjectHideFlags: 0

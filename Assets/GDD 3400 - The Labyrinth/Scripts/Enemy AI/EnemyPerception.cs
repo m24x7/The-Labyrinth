@@ -19,6 +19,9 @@ namespace GDD3400.Labyrinth
         public List<Transform> visibleTargets = new List<Transform>();
         public List<GameObject> closeObstacles = new List<GameObject>();
 
+        public bool heardNoise = false;
+        public Vector3 heardNoisePos;
+
         #region Field of View
         /// <summary>
         /// This coroutine periodically finds visible targets within the enemy's field of view
@@ -93,7 +96,11 @@ namespace GDD3400.Labyrinth
 
 
         #region Hearing
-
+        public void SetHeardNoise(Vector3 noisePos)
+        {
+            heardNoise = true;
+            heardNoisePos = noisePos;
+        }
         #endregion
     }
 }

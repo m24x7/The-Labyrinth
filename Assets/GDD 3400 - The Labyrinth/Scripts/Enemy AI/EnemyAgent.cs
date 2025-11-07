@@ -17,11 +17,14 @@ namespace GDD3400.Labyrinth
             set => _isActive = value;
         }
 
-        // Scripts
-        [SerializeField] private EnemyMovement Movement;
-        [SerializeField] private EnemyPerception Perception;
+        #region Scripts
+        [SerializeField] public EnemyMovement Movement;
+        [SerializeField] public EnemyPerception Perception;
+        [SerializeField] private EnemyDecisionMaking Decision;
+        [SerializeField] private EnemyActions Actions;
+        #endregion
 
-        // Movement Settings
+        #region Movement Settings
         [SerializeField] public float _TurnRate = 10f;
         [SerializeField] public float _MaxSpeed = 5f;
         [SerializeField] public float _SightDistance = 25f;
@@ -33,12 +36,18 @@ namespace GDD3400.Labyrinth
 
         [Tooltip("The minimum distance to the destination before we start using the pathfinder")]
         [SerializeField] public float _MinimumPathDistance = 6f;
+        #endregion
 
-        // Movement Vars
+        #region Movement Vars
         [SerializeField] private Vector3 _velocity;
+        public Vector3 Velocity => _velocity;
         [SerializeField] private Vector3 _floatingTarget;
+        public Vector3 FloatingTarget { get => _floatingTarget; set => _floatingTarget = value; }
         [SerializeField] private Vector3 _destinationTarget;
+        public Vector3 DestinationTarget => _destinationTarget;
         List<PathNode> _path;
+        public List<PathNode> Path => _path;
+        #endregion
 
         private Rigidbody _rb;
 
@@ -58,6 +67,7 @@ namespace GDD3400.Labyrinth
             // Grab and store agent modules
             Movement = GetComponent<EnemyMovement>();
             Perception = GetComponent<EnemyPerception>();
+            Decision = GetComponent<EnemyDecisionMaking>();
 
             // Grab and store the wall layer
             _wallLayer = LayerMask.GetMask("Walls");
@@ -76,6 +86,10 @@ namespace GDD3400.Labyrinth
 
             // Start Enemy Line of Sight Routine
             StartCoroutine(Perception.FindTargetsWithDelay(0.2f));
+
+            // Initialize destination & target position to starting position
+            _destinationTarget = transform.position;
+            _floatingTarget = transform.position;
         }
 
         public void Update()
@@ -87,20 +101,9 @@ namespace GDD3400.Labyrinth
 
         private void DecisionMaking()
         {
-            // If we have a path, follow it
-            if (_path != null && _path.Count > 0)
-            {
-                if (Vector3.Distance(transform.position, _destinationTarget) <= _LeavingPathDistance)
-                {
-                    _path = null;
-                    _floatingTarget = _destinationTarget;
-                }
-                else
-                {
-                    Movement.PathFollowing(_path, out Vector3 target);
-                    _floatingTarget = target;
-                }
-            }
+            Decision.DetermineEnemyState(Perception.visibleTargets, Perception.heardNoisePos, _destinationTarget);
+
+            Decision.DetermineAction();
         }
 
         #region Action
@@ -113,7 +116,7 @@ namespace GDD3400.Labyrinth
 
             _velocity = Movement.GetNewAgentVelocity(_floatingTarget, _StoppingDistance, _velocity,
                 _MaxSpeed);
-            Debug.Log($"Agent Velocity: {_velocity}");
+            //Debug.Log($"Agent Velocity: {_velocity}");
             if (_velocity != Vector3.zero) Movement.RotateAgent(_velocity, _TurnRate);
 
             _rb.linearVelocity = _velocity;

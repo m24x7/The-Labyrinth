@@ -325,6 +325,15 @@ MonoBehaviour:
   _DashDistance: 2.5
   _DashCooldown: 1.5
   _GraphicsRoot: {fileID: 7949997854816233080}
+  SoundObjectPrefab: {fileID: 6193770600319239744, guid: 04aee2c39936ca04ea6f5f2dfe1aff04, type: 3}
+  footstepClips:
+  - {fileID: 8300000, guid: eccfe9949ce28ff4296ff01494bc1c74, type: 3}
+  FootStepVolumeBase: 0.75
+  footStepVolume: 0
+  footStepIntervalBase: 0.5
+  footStepInterval: 0
+  curFootStepInterval: 0
+  footStepRangeBase: 5
 --- !u!54 &5544389136073915643
 Rigidbody:
   m_ObjectHideFlags: 0

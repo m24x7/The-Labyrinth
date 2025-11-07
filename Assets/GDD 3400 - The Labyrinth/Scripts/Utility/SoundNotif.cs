@@ -1,5 +1,5 @@
+using System.Collections.Generic;
 using Unity.VisualScripting;
-using UnityEditor;
 using UnityEngine;
 
 namespace GDD3400.Labyrinth
@@ -21,14 +21,8 @@ namespace GDD3400.Labyrinth
         {
             Collider[] hitColliders = Physics.OverlapSphere(soundCenter, soundRadius, hitMask);
 
-            if (hitColliders.Length == 0)
-            {
-                collectedColliders = null;
-                return false;
-            }
-
             collectedColliders = hitColliders;
-            return true;
+            return collectedColliders.Length > 0;
         }
 
         /// <summary>
@@ -37,24 +31,41 @@ namespace GDD3400.Labyrinth
         /// <param name="colliders"></param>
         /// <param name="collectedObjects"></param>
         /// <returns></returns>
-        public static bool TryCollidersToGameObjects(Collider[] colliders, out GameObject[] collectedObjects)
+        public static bool TryCollidersToGameObjects(Collider[] colliders, out List<GameObject> collectedObjects)
         {
-            collectedObjects = null;
+            collectedObjects = new List<GameObject>();
             if (colliders == null || colliders.Length == 0)
             {
                 return false;
             }
 
 
-            for (int i = 0; i < colliders.Length; i++)
+            foreach(Collider col in colliders)
             {
-                //ArrayUtility.AddRange(ref collectedObjects, colliders[i].gameObject);
-                //collectedObjects.add
+                if (col != null)
+                {
+                    collectedObjects.Add(col.transform.root.gameObject);
+                }
             }
 
 
-            
-            return false;
+
+            return collectedObjects.Count > 0;
+        }
+
+        public static bool TryNotifyAgentsOfSound(List<GameObject> objects, Transform soundPosition)
+        {
+            bool notifiedAtLeastOne = false;
+            foreach (GameObject obj in objects)
+            {
+                EnemyAgent agent = obj.GetComponent<EnemyAgent>();
+                if (agent != null)
+                {
+                    agent.Perception.SetHeardNoise(soundPosition.position);
+                    notifiedAtLeastOne = true;
+                }
+            }
+            return notifiedAtLeastOne;
         }
     }
 }

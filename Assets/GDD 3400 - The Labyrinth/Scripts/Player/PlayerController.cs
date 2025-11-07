@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -34,6 +35,18 @@ namespace  GDD3400.Labyrinth
 
         private bool isSneaking;
 
+        [SerializeField] private GameObject SoundObjectPrefab;
+
+        [SerializeField] private AudioClip[] footstepClips = new AudioClip[1];
+        [SerializeField] private float FootStepVolumeBase = 0.75f;
+        [SerializeField] private float footStepVolume;
+        [SerializeField] private float footStepIntervalBase = 0.5f;
+        [SerializeField] private float footStepInterval;
+        [SerializeField] private float curFootStepInterval = 0;
+        [SerializeField] private float footStepRangeBase = 5f;
+        //private Action soundPlayed;
+        private Coroutine notifyAgentsOfSound;
+
         private void Awake()
         {
             // Assign member variables
@@ -42,6 +55,12 @@ namespace  GDD3400.Labyrinth
             AssignInputVars();
 
             AssignMovementVarDefaults();
+
+            AssignAudioVarDefaults();
+
+            SetFootstepInterval();
+
+            //soundPlayed += NotifyAgentsOfSound;
         }
 
         private void Update()
@@ -53,11 +72,11 @@ namespace  GDD3400.Labyrinth
             // Face the player toward the movement direction
             if (_moveVector.magnitude > 0f) transform.forward = Vector3.Lerp(transform.forward, _moveVector, 0.2f);
 
-            // If the dash is available and pressed this frame, perform the dash
-            //if (!_isDashing && _dashAction.WasPressedThisFrame()) PerformDash();
-
             // If sprint is held down, enable sprinting
-            if (sprintAction.IsPressed()) isSprinting = true;
+            if (sprintAction.IsPressed())
+            {
+                isSprinting = true;
+            }
             else isSprinting = false;
 
             // If sneak is held down, enable sneaking
@@ -69,17 +88,41 @@ namespace  GDD3400.Labyrinth
                 if (isSprinting) isSprinting = false;
             }
             else isSneaking = false;
+
+            SetFootstepInterval();
         }
 
         private void FixedUpdate()
         {
-            // Determine current move speed based on sprinting/sneaking state
-            if (!isSprinting && !isSneaking) curMoveSpeed = BaseMoveSpeed;
-            else if (isSprinting) curMoveSpeed = BaseMoveSpeed * 1.5f;
-            else if (isSneaking) curMoveSpeed = BaseMoveSpeed * 0.5f;
+            if (_moveVector.magnitude != 0)
+            {
+                // Determine current move speed based on sprinting/sneaking state
+                if (!isSprinting && !isSneaking) curMoveSpeed = BaseMoveSpeed;
+                else if (isSprinting) curMoveSpeed = BaseMoveSpeed * 1.5f;
+                else if (isSneaking) curMoveSpeed = BaseMoveSpeed * 0.5f;
 
-            // Apply the movement force
-            _rigidbody.AddForce(_moveVector * curMoveSpeed * 4f, ForceMode.Force);
+                // Apply the movement force
+                _rigidbody.AddForce(_moveVector * curMoveSpeed * 4f, ForceMode.Force);
+
+                
+                if (curFootStepInterval <= 0f)
+                {
+                    //soundPlayed.Invoke();
+                    //if (notifyAgentsOfSound == null) notifyAgentsOfSound = StartCoroutine(NotifyAgentsOfSound());
+                    SoundObject temp = Instantiate<GameObject>(SoundObjectPrefab, transform.position, Quaternion.identity)
+                        .GetComponent<SoundObject>();
+                    temp.SetSoundObjectVars(footStepRangeBase, footStepVolume, footstepClips);
+                    temp.notifAgents.Invoke();
+
+                    //Debug.Log("Footstep sound played");
+                    curFootStepInterval = footStepInterval;
+                }
+            }
+
+            if (curFootStepInterval > 0f)
+            {
+                curFootStepInterval -= Time.fixedDeltaTime;
+            }
         }
 
         /// <summary>
@@ -102,6 +145,33 @@ namespace  GDD3400.Labyrinth
             isSprinting = false;
             isSneaking = false;
             curMoveSpeed = BaseMoveSpeed;
+        }
+
+        private void AssignAudioVarDefaults()
+        {
+            footStepVolume = FootStepVolumeBase;
+            footStepInterval = footStepIntervalBase;
+        }
+
+        private void SetFootstepInterval()
+        {
+            if (!isSprinting && !isSneaking)
+            {
+                footStepInterval = footStepIntervalBase;
+                return;
+            }
+
+            if (isSprinting)
+            {
+                footStepInterval = footStepIntervalBase * 0.75f;
+                return;
+            }
+
+            if (isSneaking)
+            {
+                footStepInterval = footStepIntervalBase * 1.5f;
+                return;
+            }
         }
     }
 }
