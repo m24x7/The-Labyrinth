@@ -6,6 +6,9 @@ using UnityEngine.SceneManagement;
 
 namespace GDD3400.Labyrinth
 {
+    /// <summary>
+    /// This class represents an enemy agent in the game, acting as the brain.
+    /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     public class EnemyAgent : MonoBehaviour
     {
@@ -29,20 +32,6 @@ namespace GDD3400.Labyrinth
         public EnemyActions GetActions => Actions;
         #endregion
 
-        //#region Movement Settings
-        //[SerializeField] public float _TurnRate = 10f;
-        //[SerializeField] public float _MaxSpeed = 5f;
-        //[SerializeField] public float _SightDistance = 25f;
-
-        //[SerializeField] public float _StoppingDistance = 1.5f;
-
-        //[Tooltip("The distance to the destination before we start leaving the path")]
-        //[SerializeField] public float _LeavingPathDistance = 2f; // This should not be less than 1
-
-        //[Tooltip("The minimum distance to the destination before we start using the pathfinder")]
-        //[SerializeField] public float _MinimumPathDistance = 6f;
-        //#endregion
-
         #region Movement Vars
         [SerializeField] private Vector3 _velocity;
         public Vector3 Velocity => _velocity;
@@ -61,11 +50,13 @@ namespace GDD3400.Labyrinth
 
         private LayerMask _wallLayer;
 
+        // Audio Alert Chase
         [SerializeField] private AudioClip[] alertClip = new AudioClip[1];
         [SerializeField] private float alertTimerMax = 5f;
         [SerializeField] private float alertTimerMin = 2f;
         [SerializeField] private float alertTimer = 0f;
 
+        // Audio Alert Investigate
         [SerializeField] private AudioClip[] investigateClip = new AudioClip[1];
         [SerializeField] private float InvestigateTimerMax = 5f;
         [SerializeField] private float InvestigateTimerMin = 2f;
@@ -74,6 +65,9 @@ namespace GDD3400.Labyrinth
         private bool DEBUG_SHOW_PATH = true;
 
 
+        /// <summary>
+        /// Awake is called when the script instance is being loaded
+        /// </summary>
         public void Awake()
         {
             // Grab and store the rigidbody component
@@ -92,6 +86,9 @@ namespace GDD3400.Labyrinth
             if (agentCollider == null) agentCollider = transform.Find("Collider").GetComponent<CapsuleCollider>();
         }
 
+        /// <summary>
+        /// Start is called before the first frame update
+        /// </summary>
         public void Start()
         {
             // If we didn't manually set the level manager, find it
@@ -108,12 +105,16 @@ namespace GDD3400.Labyrinth
             _floatingTarget = transform.position;
         }
 
+        /// <summary>
+        /// Update is called once per frame
+        /// </summary>
         public void Update()
         {
             if (!_isActive) return;
 
-            DecisionMaking();
+            DecisionMaking(); // Handle Decision Making
 
+            // Play Chase Alert Sound if in Chase State
             if (Decision.enemyState == EnemyState.Chase)
             {
                 if (alertTimer <= 0f)
@@ -127,6 +128,7 @@ namespace GDD3400.Labyrinth
                 }
             }
 
+            // Play Investigate Sound if in Investigate State
             if (Decision.enemyState == EnemyState.Investigate)
             {
                 if (InvestigateTimer <= 0f)
@@ -141,6 +143,9 @@ namespace GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// This method handles the decision-making process of the enemy agent
+        /// </summary>
         private void DecisionMaking()
         {
             Decision.DetermineEnemyState(Perception.visibleTargets, Perception.heardNoisePos, _destinationTarget);
@@ -149,20 +154,27 @@ namespace GDD3400.Labyrinth
         }
 
         #region Action
+        /// <summary>
+        /// FixedUpdate is called at a fixed interval and is independent of frame rate
+        /// </summary>
         private void FixedUpdate()
         {
             if (!_isActive) return;
 
-
+            
             Debug.DrawLine(transform.position, _floatingTarget, Color.green);
 
+            // Get new velocity based on floating target
             _velocity = Movement.GetNewAgentVelocity(_floatingTarget, _velocity);
 
             //Debug.Log($"Agent Velocity: {_velocity}");
             //if (_velocity != Vector3.zero) Movement.RotateAgent(_velocity);
+
+            // Rotate to face floating target
             Movement.FaceTowards(_floatingTarget);
             //_rb.MovePosition(Movement.WallAvoidanceBehavior());
 
+            // Apply velocity to rigidbody
             _rb.linearVelocity = _velocity;
 
             // Reset angular velocity to prevent physics interference
@@ -178,19 +190,25 @@ namespace GDD3400.Labyrinth
         /// <param name="destination"></param>
         public void SetDestinationTarget(Vector3 destination)
         {
+            // Use the Movement module to set the destination target
             Movement.SetDestinationTarget(_path, destination, _levelManager,
                 out Vector3 destTarget, out Vector3 floatTarget, out List<PathNode> newPath);
 
-            _destinationTarget = destTarget;
+            _destinationTarget = destTarget; // Update destination target
 
-            if (floatTarget != new Vector3()) _floatingTarget = floatTarget;
+            if (floatTarget != new Vector3()) _floatingTarget = floatTarget; // Update floating target
 
-            if (newPath != null) _path = newPath;
+            if (newPath != null) _path = newPath; // Update path
         }
         #endregion
 
+        /// <summary>
+        /// OnCollisionEnter is called when this collider/rigidbody has begun touching another rigidbody/collider
+        /// </summary>
+        /// <param name="collision"></param>
         private void OnCollisionEnter(Collision collision)
         {
+            // If we collide with the player, restart the level
             if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
             {
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);

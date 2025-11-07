@@ -32,9 +32,9 @@ namespace  GDD3400.Labyrinth
         //private bool _performDash;
         //private bool _isDashing;
 
+        // Movement Vars
         private bool isSprinting;
         private float curMoveSpeed;
-
         private bool isSneaking;
         public bool IsSneaking => isSneaking;
 
@@ -44,36 +44,47 @@ namespace  GDD3400.Labyrinth
         #region Audio Variables
         [SerializeField] private GameObject SoundObjectPrefab;
 
+        #region Footstep Audio Vars
+        // Footstep audio clips
         [SerializeField] private AudioClip[] footstepClips = new AudioClip[1];
+
+        // Footstep audio volume levels
         [SerializeField] private const float FootStepVolumeSneak = 0.25f;
         [SerializeField] private const float FootStepVolumeWalk = 0.5f;
         [SerializeField] private const float FootStepVolumeSprint = 0.60f;
         [SerializeField] private float footStepVolume;
 
+        // Footstep audio intervals
         [SerializeField] private const float FootStepIntervalSneak = 0.75f;
         [SerializeField] private const float FootStepIntervalWalk = 0.5f;
         [SerializeField] private const float FootStepIntervalSprint = 0.25f;
         [SerializeField] private float footStepInterval;
         [SerializeField] private float curFootStepInterval = 0;
 
+        // Footstep audio ranges
         [SerializeField] private const float FootStepRangeSneak = 2f;
         [SerializeField] private const float FootStepRangeWalk = 7f;
         [SerializeField] private const float FootStepRangeSprint = 10f;
         [SerializeField] private float footStepRange;
+        #endregion
+
         //private Action soundPlayed;
         private Coroutine notifyAgentsOfSound;
         #endregion
 
         #region Camera
-        [SerializeField] private GameObject camTarget;
+        [SerializeField] private GameObject camTarget; // Cinemachine camera target
         [SerializeField] private float TopClamp = 90.0f;
         [SerializeField] private float BottomClamp = -90.0f;
-        [SerializeField] private float threshold = 0.01f;
+        [SerializeField] private float threshold = 0.01f; // to prevent too small input from affecting camera movement
         [SerializeField] private GameObject mainCamera;
         private float cinemachineTargetPitch;
         private float rotationVelocity;
         #endregion
 
+        /// <summary>
+        /// Awake is called when the script instance is being loaded
+        /// </summary>
         private void Awake()
         {
             // Assign member variables
@@ -100,6 +111,9 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// Start is called before the first frame update
+        /// </summary>
         private void Start()
         {
             // Lock cursor to center of screen
@@ -107,6 +121,9 @@ namespace  GDD3400.Labyrinth
             Cursor.visible = false;
         }
 
+        /// <summary>
+        /// Update is called once per frame
+        /// </summary>
         private void Update()
         {
             // Store current input move vector, remap from X/Y to X/Z
@@ -133,6 +150,7 @@ namespace  GDD3400.Labyrinth
             }
             else isSneaking = false;
 
+            // Update footstep audio settings based on movement flags
             SetFootstepInterval();
             SetFootstepAudioRange();
             SetFootstepAudioVolume();
@@ -145,42 +163,60 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// FixedUpdate is called at a fixed interval and is independent of frame rate
+        /// </summary>
         private void FixedUpdate()
         {
             // Reset angular velocity to prevent physics interference
             if (GetComponent<Rigidbody>() != null) GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
 
+            // If there is movement input
             if (_moveVector.magnitude != 0)
             {
+                // Update current move speed based on sprinting/sneaking state
                 SetMoveSpeed();
 
                 // Apply the movement force
                 //_rigidbody.AddForce((_moveVector.x * transform.right + _moveVector.z * transform.forward) * curMoveSpeed * 4f, ForceMode.Force);
+
+                // Move the character controller
                 charController.Move((_moveVector.x * transform.right + _moveVector.z * transform.forward).normalized * curMoveSpeed * Time.fixedDeltaTime);
 
+                // Handle footstep audio playback
                 if (curFootStepInterval <= 0f)
                 {
                     //soundPlayed.Invoke();
                     //if (notifyAgentsOfSound == null) notifyAgentsOfSound = StartCoroutine(NotifyAgentsOfSound());
                     SoundObject temp = Instantiate<GameObject>(SoundObjectPrefab, transform.position, Quaternion.identity)
                         .GetComponent<SoundObject>();
+
+                    // Set sound object variables
                     temp.SetSoundObjectVars(footStepRange, footStepVolume, footstepClips);
+
+                    // Notify nearby agents of the sound
                     temp.notifAgents.Invoke();
 
                     //Debug.Log("Footstep sound played");
+
+                    // Reset footstep interval timer
                     curFootStepInterval = footStepInterval;
                 }
             }
 
+            // Decrease footstep interval timer
             if (curFootStepInterval > 0f)
             {
                 curFootStepInterval -= Time.fixedDeltaTime;
             }
         }
 
+        /// <summary>
+        /// LateUpdate is called after all Update functions have been called
+        /// </summary>
         private void LateUpdate()
         {
-            CameraRotation();
+            CameraRotation(); // Handle camera rotation
         }
 
         /// <summary>
@@ -195,10 +231,19 @@ namespace  GDD3400.Labyrinth
             useDistractionAction = InputSystem.actions.FindAction("UseDistraction");
         }
 
+        /// <summary>
+        /// OnLook is called when there is look input from the player
+        /// </summary>
+        /// <param name="value"></param>
         public void OnLook(InputValue value)
         {
             LookInput(value.Get<Vector2>());
         }
+
+        /// <summary>
+        /// LookInput processes look input from the player
+        /// </summary>
+        /// <param name="newLookDir"></param>
         public void LookInput(Vector2 newLookDir)
         {
             look = newLookDir;
@@ -215,6 +260,12 @@ namespace  GDD3400.Labyrinth
             curMoveSpeed = WalkSpeed;
         }
 
+        /// <summary>
+        /// Assigns default values to audio-related variables for footsteps.
+        /// </summary>
+        /// <remarks>This method sets the footstep volume, interval, and range to their default values 
+        /// associated with walking. It is intended to initialize or reset these variables  to their standard
+        /// defaults.</remarks>
         private void AssignAudioVarDefaults()
         {
             footStepVolume = FootStepVolumeWalk;
@@ -222,6 +273,9 @@ namespace  GDD3400.Labyrinth
             footStepRange = FootStepRangeWalk;
         }
 
+        /// <summary>
+        /// Sets the footstep interval based on the player's current movement state (sprinting, sneaking, or walking).
+        /// </summary>
         private void SetFootstepInterval()
         {
             if (!isSprinting && !isSneaking)
@@ -243,6 +297,9 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        ///  Sets the footstep audio range based on the player's current movement state (sprinting, sneaking, or walking).
+        /// </summary>
         private void SetFootstepAudioRange()
         {
             if (!isSprinting && !isSneaking)
@@ -264,6 +321,9 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// Sets the footstep audio volume based on the current movement state (sprinting, sneaking, or walking).
+        /// </summary>
         private void SetFootstepAudioVolume()
         {
             if (!isSprinting && !isSneaking)
@@ -285,6 +345,9 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// Sets the current movement speed based on whether the player is sprinting, sneaking, or walking.
+        /// </summary>
         private void SetMoveSpeed()
         {
             // Determine current move speed based on sprinting/sneaking state
@@ -305,6 +368,9 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// Sets the camera rotation based on player input.
+        /// </summary>
         private void CameraRotation()
         {
             // if there is an input
@@ -324,6 +390,13 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// This method clamps an angle between a minimum and maximum value.
+        /// </summary>
+        /// <param name="lfAngle"></param>
+        /// <param name="lfMin"></param>
+        /// <param name="lfMax"></param>
+        /// <returns></returns>
         private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
         {
             if (lfAngle < -360f) lfAngle += 360f;

@@ -42,11 +42,14 @@ namespace GDD3400.Labyrinth
         /// <param name="_floatingTarget"></param>
         public void PathFollowing(List<PathNode> _path, out Vector3 _floatingTarget)
         {
+            // Find the closest node to the agent's current position
             int closestNodeIndex = GetClosestNode(_path);
+
+            // Get the next node index
             int nextNodeIndex = closestNodeIndex + 1;
 
+            // Determine the target node
             PathNode targetNode = null;
-
             if (nextNodeIndex < _path.Count)
             {
                 targetNode = _path[nextNodeIndex];
@@ -56,6 +59,7 @@ namespace GDD3400.Labyrinth
                 targetNode = _path[closestNodeIndex];
             }
 
+            // Set the floating target to the target node's position
             _floatingTarget = targetNode.transform.position;
         }
 
@@ -74,26 +78,34 @@ namespace GDD3400.Labyrinth
         {
             //Debug.Log("Destination: " + destination);
 
+            // Set the destination target
             _destinationTarget = destination;
+
+            // Reset the floating target and new path
             _floatingTarget = new Vector3();
             newPath = null;
 
             // If the straight line distance is greater than our minimum, Lets do pathfinding!
             if (Vector3.Distance(transform.position, _destinationTarget) >= _MinimumPathDistance)
             {
+                // Get the start and end nodes for pathfinding
                 PathNode startNode = _levelManager.GetNode(transform.position);
                 PathNode endNode = _levelManager.GetNode(destination);
 
+                // If we can't find either node, exit
                 if (startNode == null || endNode == null)
                 {
                     Debug.LogWarning("EnemyAgent: Unable to find start or end node for pathfinding.");
                     return;
                 }
 
+                // Find a new path using the Pathfinder
                 newPath = Pathfinder.FindPath(startNode, endNode);
 
+                // Smooth the path to remove unnecessary nodes
                 newPath = SmoothPath(newPath);
 
+                // Draw debug lines for the new path
                 StartCoroutine(DrawPathDebugLines(newPath));
             }
 
@@ -111,18 +123,22 @@ namespace GDD3400.Labyrinth
         /// <returns></returns>
         public List<PathNode> SmoothPath(List<PathNode> curPath)
         {
-            if (curPath == null || curPath.Count < 3) return curPath;
+            if (curPath == null || curPath.Count < 3) return curPath; // If the path is null or has less than 3 nodes, return it as is
 
-            List<PathNode> smoothedPath = new List<PathNode>();
-            smoothedPath.Add(curPath[0]);
+            List<PathNode> smoothedPath = new List<PathNode>(); // Create a new list to hold the smoothed path
 
-            int currentIndex = 2;
+            smoothedPath.Add(curPath[0]); // Always add the first node
 
+            int currentIndex = 2; // Start checking from the third node
+
+            // Loop through the path and remove unnecessary nodes
             while (currentIndex < curPath.Count)
             {
+                // Get the last added node to the smoothed path and the current node of the original path
                 PathNode lastAddedNode = smoothedPath[smoothedPath.Count - 1];
                 PathNode currentNode = curPath[currentIndex];
 
+                // Check if there is a direct line of sight between the last added node and the current node
                 if (!Physics.Linecast(lastAddedNode.transform.position + Vector3.up,
                     currentNode.transform.position + Vector3.up,
                     LayerMask.GetMask("Walls"),
@@ -133,8 +149,9 @@ namespace GDD3400.Labyrinth
                 currentIndex++;
             }
 
-            smoothedPath.Add(curPath[curPath.Count - 1]);
-            return smoothedPath;
+            smoothedPath.Add(curPath[curPath.Count - 1]); // Always add the last node
+
+            return smoothedPath; // Return the smoothed path
         }
 
         /// <summary>
@@ -144,18 +161,24 @@ namespace GDD3400.Labyrinth
         /// <returns></returns>
         private int GetClosestNode(List<PathNode> _path)
         {
-            int closestNodeIndex = 0;
-            float closestDistance = float.MaxValue;
+            int closestNodeIndex = 0; // Initialize to first index
+            float closestDistance = float.MaxValue; // Start with a large distance
 
+            // Loop through the path to find the closest node
             for (int i = 0; i < _path.Count; i++)
             {
+                // Calculate the distance from the agent to the current node
                 float distance = Vector3.Distance(transform.position, _path[i].transform.position);
+
+                // If this distance is less than the closest distance found so far, update the closest node index and distance
                 if (distance < closestDistance)
                 {
                     closestDistance = distance;
                     closestNodeIndex = i;
                 }
             }
+
+            // Return the index of the closest node
             return closestNodeIndex;
         }
 
@@ -166,6 +189,7 @@ namespace GDD3400.Labyrinth
         /// <returns></returns>
         private IEnumerator DrawPathDebugLines(List<PathNode> path)
         {
+            // Draw lines between each node in the path
             for (int i = 0; i < path.Count - 1; i++)
             {
                 Debug.DrawLine(path[i].transform.position, path[i + 1].transform.position, Color.red, 3.5f);
@@ -211,23 +235,39 @@ namespace GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// This method calculates a wall avoidance offset for the agent.
+        /// </summary>
+        /// <param name="minWallDist"></param>
+        /// <returns></returns>
         public Vector3 WallAvoidanceBehavior(float minWallDist = 1f)
         {
-            var center = agentCollider.bounds.center;
-            var nearby = Physics.OverlapSphere(center, minWallDist, LayerMask.NameToLayer("Walls"), QueryTriggerInteraction.Ignore);
-            if (nearby.Length == 0) return Vector3.zero;
+            var center = agentCollider.bounds.center; // Get the center of the agent's collider
 
-            Vector3 totalOffset = Vector3.zero;
+            // Find nearby wall colliders within the specified distance
+            var nearby = Physics.OverlapSphere(center,
+                minWallDist, LayerMask.NameToLayer("Walls"),
+                QueryTriggerInteraction.Ignore);
 
+            if (nearby.Length == 0) return Vector3.zero; // No nearby walls, no avoidance needed
+
+            Vector3 totalOffset = Vector3.zero; // Initialize the total offset vector
+
+            // Calculate the avoidance offset based on nearby walls
             foreach (var col in nearby)
             {
+                // Find the closest point on the wall collider to the agent's center
                 Vector3 closestPoint = col.ClosestPoint(center);
+
+                // Calculate the vector away from the wall and its distance
                 Vector3 awayFromWall = center - closestPoint;
                 float dist = awayFromWall.magnitude;
+
+                // If the agent is within the minimum wall distance, calculate the avoidance offset
                 if (dist < minWallDist)
                 {
-                    float gain = (1f - (dist / minWallDist));
-                    totalOffset += awayFromWall.normalized * (gain * (minWallDist - dist));
+                    float gain = (1f - (dist / minWallDist)); // Gain increases as we get closer to the wall
+                    totalOffset += awayFromWall.normalized * (gain * (minWallDist - dist)); // Scale the offset by the gain and distance
                 }
             }
 
@@ -258,14 +298,22 @@ namespace GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// This method makes the agent face towards a specific target position.
+        /// </summary>
+        /// <param name="targetPos"></param>
         public void FaceTowards(Vector3 targetPos)
         {
+            // Calculate the direction to the target position
             Vector3 direction = targetPos - transform.position;
             direction.y = 0; // Keep only the horizontal direction
 
-            if (direction.sqrMagnitude < 0.01f) return; // Avoid zero-length direction
+            if (direction.sqrMagnitude < 0.01f) return; // Avoid small direction vector
 
+            // Calculate the desired rotation towards the target position
             Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
+
+            // Smoothly rotate towards the target rotation based on the turn rate
             transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _TurnRate);
         }
         #endregion

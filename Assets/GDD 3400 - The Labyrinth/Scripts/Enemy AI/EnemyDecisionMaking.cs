@@ -56,19 +56,25 @@ namespace GDD3400.Labyrinth
 
         private EnemyAgent enemyAgent;
 
+        // Actions
         private Action idle;
         private Action chase;
         private Action investigate;
 
+        // Chase Vars
         private float chaseTimer = 0f;
         private const float maxChaseTime = 10f;
         public GameObject chaseTarget;
 
-        // Start is called once before the first execution of Update after the MonoBehaviour is created
+        /// <summary>
+        /// Start is called once before the first execution of Update after the MonoBehaviour is created
+        /// </summary>
         void Start()
         {
+            // Get Reference to EnemyAgent component
             enemyAgent = GetComponent<EnemyAgent>();
 
+            // Define Actions
             idle += () => enemyAgent.GetActions.Idle();
 
             chase += () => enemyAgent.GetActions.ChasePlayer();
@@ -76,9 +82,12 @@ namespace GDD3400.Labyrinth
             investigate = () => enemyAgent.GetActions.InvestigateNoise();
         }
 
-        // Update is called once per frame
+        /// <summary>
+        /// Update is called once per frame
+        /// </summary>
         void Update()
         {
+            // Decrease chase timer
             if (chaseTimer > 0)
             {
                 chaseTimer -= Time.deltaTime;
@@ -92,6 +101,7 @@ namespace GDD3400.Labyrinth
         /// <returns></returns>
         public void DetermineEnemyState(List<Transform> visibleTargets, Vector3 heardNoisePos, Vector3 targetPos)
         {
+            // Update perception flags
             CheckVisibleTargets(visibleTargets);
             CheckHeardNoise(enemyAgent.GetPerception.heardNoise);
             CheckAtTargetPosition(targetPos);
@@ -136,6 +146,9 @@ namespace GDD3400.Labyrinth
             enemyState = EnemyState.Idle;
         }
 
+        /// <summary>
+        /// This method determines the action to take based on the current enemy state.
+        /// </summary>
         public void DetermineAction()
         {
             switch (enemyState)
@@ -155,6 +168,10 @@ namespace GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// This method checks if there are any visible targets.
+        /// </summary>
+        /// <param name="targets"></param>
         public void CheckVisibleTargets(List<Transform> targets)
         {
             if (targets.Count > 0)
@@ -167,11 +184,20 @@ namespace GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// This method checks if the enemy has heard a noise.
+        /// </summary>
+        /// <param name="_heardNoise"></param>
         public void CheckHeardNoise(bool _heardNoise)
         {
             heardNoise = _heardNoise;
         }
 
+        /// <summary>
+        /// This method checks if the enemy has visited the noise position.
+        /// </summary>
+        /// <param name="noisePosition"></param>
+        /// <param name="threshold"></param>
         public void VisitedNoisePosition(Vector3 noisePosition, float threshold = 0.5f)
         {
             if (Vector3.Distance(transform.position, noisePosition) <= threshold)
@@ -180,6 +206,11 @@ namespace GDD3400.Labyrinth
             }
         }
 
+        /// <summary>
+        /// This method checks if the enemy is at the target position.
+        /// </summary>
+        /// <param name="targetPosition"></param>
+        /// <param name="threshold"></param>
         public void CheckAtTargetPosition(Vector3 targetPosition, float threshold = 0.5f)
         {
             if (Vector3.Distance(transform.position, targetPosition) <= threshold)
