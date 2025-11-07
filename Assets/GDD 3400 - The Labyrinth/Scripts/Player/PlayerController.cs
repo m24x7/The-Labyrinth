@@ -13,9 +13,8 @@ namespace  GDD3400.Labyrinth
     public class PlayerController : MonoBehaviour
     {
         [Header("Player Settings")]
-        [SerializeField] private float BaseMoveSpeed = 10;
-        [SerializeField] private float _DashDistance = 2.5f;
-        [SerializeField] private float _DashCooldown = 1.5f;
+        [SerializeField] private float BaseMoveSpeed = 4.0f;
+        [SerializeField] private float RotationSpeed = 1.0f;
 
         [Header("Connections")]
         [SerializeField] private Transform _GraphicsRoot;
@@ -26,6 +25,7 @@ namespace  GDD3400.Labyrinth
         private InputAction sneakAction;
         private InputAction useDistractionAction;
         private Vector3 _moveVector;
+        private Vector2 look;
 
         //private bool _performDash;
         //private bool _isDashing;
@@ -35,6 +35,7 @@ namespace  GDD3400.Labyrinth
 
         private bool isSneaking;
 
+        #region Audio Variables
         [SerializeField] private GameObject SoundObjectPrefab;
 
         [SerializeField] private AudioClip[] footstepClips = new AudioClip[1];
@@ -46,6 +47,17 @@ namespace  GDD3400.Labyrinth
         [SerializeField] private float footStepRangeBase = 5f;
         //private Action soundPlayed;
         private Coroutine notifyAgentsOfSound;
+        #endregion
+
+        #region Camera
+        [SerializeField] private GameObject camTarget;
+        [SerializeField] private float TopClamp = 90.0f;
+        [SerializeField] private float BottomClamp = -90.0f;
+        [SerializeField] private float threshold = 0.01f;
+        [SerializeField] private GameObject mainCamera;
+        private float cinemachineTargetPitch;
+        private float rotationVelocity;
+        #endregion
 
         private void Awake()
         {
@@ -60,7 +72,18 @@ namespace  GDD3400.Labyrinth
 
             SetFootstepInterval();
 
-            //soundPlayed += NotifyAgentsOfSound;
+            // Get the main camera in the scene
+            if (mainCamera == null)
+            {
+                mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
+            }
+        }
+
+        private void Start()
+        {
+            // Lock cursor to center of screen
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
 
         private void Update()
@@ -125,15 +148,30 @@ namespace  GDD3400.Labyrinth
             }
         }
 
+        private void LateUpdate()
+        {
+            CameraRotation();
+        }
+
         /// <summary>
         /// This method assigns input action variables
         /// </summary>
         private void AssignInputVars()
         {
+            look = InputSystem.actions.FindAction("Look").ReadValue<Vector2>();
             _moveAction = InputSystem.actions.FindAction("Move");
             sprintAction = InputSystem.actions.FindAction("Sprint");
             sneakAction = InputSystem.actions.FindAction("Sneak");
             useDistractionAction = InputSystem.actions.FindAction("UseDistraction");
+        }
+
+        public void OnLook(InputValue value)
+        {
+            LookInput(value.Get<Vector2>());
+        }
+        public void LookInput(Vector2 newLookDir)
+        {
+            look = newLookDir;
         }
 
         /// <summary>
@@ -172,6 +210,32 @@ namespace  GDD3400.Labyrinth
                 footStepInterval = footStepIntervalBase * 1.5f;
                 return;
             }
+        }
+
+        private void CameraRotation()
+        {
+            // if there is an input
+            if (look.sqrMagnitude >= threshold)
+            {
+                cinemachineTargetPitch += look.y * RotationSpeed;
+                rotationVelocity = look.x * RotationSpeed;
+
+                // clamp our pitch rotation
+                cinemachineTargetPitch = ClampAngle(cinemachineTargetPitch, BottomClamp, TopClamp);
+
+                // Update Cinemachine camera target pitch
+                camTarget.transform.localRotation = Quaternion.Euler(cinemachineTargetPitch, 0.0f, 0.0f);
+
+                // rotate the player left and right
+                transform.Rotate(Vector3.up * rotationVelocity);
+            }
+        }
+
+        private static float ClampAngle(float lfAngle, float lfMin, float lfMax)
+        {
+            if (lfAngle < -360f) lfAngle += 360f;
+            if (lfAngle > 360f) lfAngle -= 360f;
+            return Mathf.Clamp(lfAngle, lfMin, lfMax);
         }
     }
 }
