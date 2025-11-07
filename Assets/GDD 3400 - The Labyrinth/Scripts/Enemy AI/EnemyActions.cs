@@ -20,7 +20,7 @@ namespace GDD3400.Labyrinth
         {
             //if (pathFollowingInProgress)
             {
-                PathFollowing(agent.Path, agent.DestinationTarget, agent._LeavingPathDistance, agent.Movement, out Vector3 newTarget);
+                PathFollowing(agent.Path, agent.DestinationTarget, agent.Movement, out Vector3 newTarget);
                 agent.FloatingTarget = newTarget;
             }
         }
@@ -44,12 +44,12 @@ namespace GDD3400.Labyrinth
             pathFollowingInProgress = true;
         }
 
-        public void PathFollowing(List<PathNode> _path, Vector3 newTarget, float _LeavingPathDistance, EnemyMovement Movement, out Vector3 _floatingTarget)
+        public void PathFollowing(List<PathNode> _path, Vector3 newTarget, EnemyMovement Movement, out Vector3 _floatingTarget)
         {
             // If we have a path, follow it
             if (_path != null && _path.Count > 0)
             {
-                if (Vector3.Distance(transform.position, newTarget) <= _LeavingPathDistance)
+                if (Vector3.Distance(transform.position, newTarget) <= Movement._LeavingPathDistance)
                 {
                     _path = null;
                     _floatingTarget = newTarget;

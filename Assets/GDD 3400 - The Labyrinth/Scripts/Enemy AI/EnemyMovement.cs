@@ -10,6 +10,30 @@ namespace GDD3400.Labyrinth
     [RequireComponent(typeof(EnemyAgent))]
     public class EnemyMovement : MonoBehaviour
     {
+        #region Movement Settings
+        [SerializeField] public float _TurnRate = 10f;
+        [SerializeField] public float _MaxSpeed = 5f;
+        [SerializeField] public float _SightDistance = 25f;
+
+        [SerializeField] public float _StoppingDistance = 1f;
+
+        [Tooltip("The distance to the destination before we start leaving the path")]
+        [SerializeField] public float _LeavingPathDistance = 2f; // This should not be less than 1
+
+        [Tooltip("The minimum distance to the destination before we start using the pathfinder")]
+        [SerializeField] public float _MinimumPathDistance = 4f;
+        #endregion
+
+        //#region Movement Vars
+        //[SerializeField] private Vector3 _velocity;
+        //public Vector3 Velocity => _velocity;
+        //[SerializeField] private Vector3 _floatingTarget;
+        //public Vector3 FloatingTarget { get => _floatingTarget; set => _floatingTarget = value; }
+        //[SerializeField] private Vector3 _destinationTarget;
+        //public Vector3 DestinationTarget => _destinationTarget;
+        //List<PathNode> _path;
+        //public List<PathNode> Path => _path;
+        //#endregion
         private void FixedUpdate()
         {
             // Reset angular velocity to prevent physics interference
@@ -52,7 +76,7 @@ namespace GDD3400.Labyrinth
         /// <param name="_destinationTarget"></param>
         /// <param name="_floatingTarget"></param>
         /// <param name="newPath"></param>
-        public void SetDestinationTarget(List<PathNode> _path, Vector3 destination, float _MinimumPathDistance, LevelManager _levelManager,
+        public void SetDestinationTarget(List<PathNode> _path, Vector3 destination, LevelManager _levelManager,
             out Vector3 _destinationTarget, out Vector3 _floatingTarget, out List<PathNode> newPath)
         {
             //Debug.Log("Destination: " + destination);
@@ -166,7 +190,7 @@ namespace GDD3400.Labyrinth
         /// <param name="curVelocity"></param>
         /// <param name="_MaxSpeed"></param>
         /// <returns></returns>
-        public Vector3 GetNewAgentVelocity(Vector3 _floatingTarget, float _StoppingDistance, Vector3 curVelocity, float _MaxSpeed)
+        public Vector3 GetNewAgentVelocity(Vector3 _floatingTarget, Vector3 curVelocity)
         {
             // If we have a floating target and we are not close enough to it, move towards it
             if (_floatingTarget != Vector3.zero && Vector3.Distance(transform.position, _floatingTarget) > _StoppingDistance)
@@ -192,12 +216,17 @@ namespace GDD3400.Labyrinth
             }
         }
 
+        private Vector3 WallAvoidanceBehavior()
+        {
+            return Vector3.zero;
+        }
+
         /// <summary>
         /// This method rotates the agent to face the direction of its velocity.
         /// </summary>
         /// <param name="_velocity"></param>
         /// <param name="_TurnRate"></param>
-        public void RotateAgent(Vector3 _velocity, float _TurnRate)
+        public void RotateAgent(Vector3 _velocity)
         {
             //Debug.Log($"Rotating Agent with Velocity: {_velocity}");
 

@@ -13,8 +13,10 @@ namespace  GDD3400.Labyrinth
     public class PlayerController : MonoBehaviour
     {
         [Header("Player Settings")]
-        [SerializeField] private float BaseMoveSpeed = 4.0f;
-        [SerializeField] private float RotationSpeed = 1.0f;
+        [SerializeField] private const float SneakSpeed = 2.0f;
+        [SerializeField] private const float WalkSpeed = 4.0f;
+        [SerializeField] private const float SprintSpeed = 6.0f;
+        [SerializeField] private const float RotationSpeed = 1.0f;
 
         [Header("Connections")]
         [SerializeField] private Transform _GraphicsRoot;
@@ -43,12 +45,21 @@ namespace  GDD3400.Labyrinth
         [SerializeField] private GameObject SoundObjectPrefab;
 
         [SerializeField] private AudioClip[] footstepClips = new AudioClip[1];
-        [SerializeField] private float FootStepVolumeBase = 0.75f;
+        [SerializeField] private const float FootStepVolumeSneak = 0.25f;
+        [SerializeField] private const float FootStepVolumeWalk = 0.5f;
+        [SerializeField] private const float FootStepVolumeSprint = 0.60f;
         [SerializeField] private float footStepVolume;
-        [SerializeField] private float footStepIntervalBase = 0.5f;
+
+        [SerializeField] private const float FootStepIntervalSneak = 0.75f;
+        [SerializeField] private const float FootStepIntervalWalk = 0.5f;
+        [SerializeField] private const float FootStepIntervalSprint = 0.25f;
         [SerializeField] private float footStepInterval;
         [SerializeField] private float curFootStepInterval = 0;
-        [SerializeField] private float footStepRangeBase = 5f;
+
+        [SerializeField] private const float FootStepRangeSneak = 2f;
+        [SerializeField] private const float FootStepRangeWalk = 5f;
+        [SerializeField] private const float FootStepRangeSprint = 8f;
+        [SerializeField] private float footStepRange;
         //private Action soundPlayed;
         private Coroutine notifyAgentsOfSound;
         #endregion
@@ -123,11 +134,13 @@ namespace  GDD3400.Labyrinth
             else isSneaking = false;
 
             SetFootstepInterval();
+            SetFootstepAudioRange();
+            SetFootstepAudioVolume();
 
             // Handle distraction item usage
             if (useDistractionAction.WasPressedThisFrame())
             {
-                GameObject temp = Instantiate<GameObject>(distractionItemPrefab, transform.position, transform.rotation);
+                GameObject temp = Instantiate<GameObject>(distractionItemPrefab, camTarget.transform.position, transform.rotation);
                 temp.GetComponent<ThrowItem>().InitializeThrownItem(mainCamera.transform.forward, 10f);
             }
         }
@@ -139,14 +152,11 @@ namespace  GDD3400.Labyrinth
 
             if (_moveVector.magnitude != 0)
             {
-                // Determine current move speed based on sprinting/sneaking state
-                if (!isSprinting && !isSneaking) curMoveSpeed = BaseMoveSpeed;
-                else if (isSprinting) curMoveSpeed = BaseMoveSpeed * 1.5f;
-                else if (isSneaking) curMoveSpeed = BaseMoveSpeed * 0.5f;
+                SetMoveSpeed();
 
                 // Apply the movement force
                 //_rigidbody.AddForce((_moveVector.x * transform.right + _moveVector.z * transform.forward) * curMoveSpeed * 4f, ForceMode.Force);
-                charController.Move((_moveVector.x * mainCamera.transform.right + _moveVector.z * mainCamera.transform.forward).normalized * curMoveSpeed * Time.fixedDeltaTime);
+                charController.Move((_moveVector.x * transform.right + _moveVector.z * transform.forward).normalized * curMoveSpeed * Time.fixedDeltaTime);
 
                 if (curFootStepInterval <= 0f)
                 {
@@ -154,7 +164,7 @@ namespace  GDD3400.Labyrinth
                     //if (notifyAgentsOfSound == null) notifyAgentsOfSound = StartCoroutine(NotifyAgentsOfSound());
                     SoundObject temp = Instantiate<GameObject>(SoundObjectPrefab, transform.position, Quaternion.identity)
                         .GetComponent<SoundObject>();
-                    temp.SetSoundObjectVars(footStepRangeBase, footStepVolume, footstepClips);
+                    temp.SetSoundObjectVars(footStepRange, footStepVolume, footstepClips);
                     temp.notifAgents.Invoke();
 
                     //Debug.Log("Footstep sound played");
@@ -202,32 +212,95 @@ namespace  GDD3400.Labyrinth
             // Set move vars to default vals
             isSprinting = false;
             isSneaking = false;
-            curMoveSpeed = BaseMoveSpeed;
+            curMoveSpeed = WalkSpeed;
         }
 
         private void AssignAudioVarDefaults()
         {
-            footStepVolume = FootStepVolumeBase;
-            footStepInterval = footStepIntervalBase;
+            footStepVolume = FootStepVolumeWalk;
+            footStepInterval = FootStepIntervalWalk;
+            footStepRange = FootStepRangeWalk;
         }
 
         private void SetFootstepInterval()
         {
             if (!isSprinting && !isSneaking)
             {
-                footStepInterval = footStepIntervalBase;
+                footStepInterval = FootStepIntervalWalk;
                 return;
             }
 
             if (isSprinting)
             {
-                footStepInterval = footStepIntervalBase * 0.75f;
+                footStepInterval = FootStepIntervalSprint;
                 return;
             }
 
             if (isSneaking)
             {
-                footStepInterval = footStepIntervalBase * 1.5f;
+                footStepInterval = FootStepIntervalSneak;
+                return;
+            }
+        }
+
+        private void SetFootstepAudioRange()
+        {
+            if (!isSprinting && !isSneaking)
+            {
+                footStepRange = FootStepRangeWalk;
+                return;
+            }
+
+            if (isSprinting)
+            {
+                footStepRange = FootStepRangeSprint;
+                return;
+            }
+
+            if (isSneaking)
+            {
+                footStepRange = FootStepRangeSneak;
+                return;
+            }
+        }
+
+        private void SetFootstepAudioVolume()
+        {
+            if (!isSprinting && !isSneaking)
+            {
+                footStepVolume = FootStepVolumeWalk;
+                return;
+            }
+
+            if (isSprinting)
+            {
+                footStepVolume = FootStepVolumeSprint;
+                return;
+            }
+
+            if (isSneaking)
+            {
+                footStepVolume = FootStepVolumeSneak;
+                return;
+            }
+        }
+
+        private void SetMoveSpeed()
+        {
+            // Determine current move speed based on sprinting/sneaking state
+            if (!isSprinting && !isSneaking)
+            {
+                curMoveSpeed = WalkSpeed;
+                return;
+            }
+            else if (isSprinting)
+            {
+                curMoveSpeed = SprintSpeed;
+                return;
+            }
+            else if (isSneaking)
+            {
+                curMoveSpeed = SneakSpeed;
                 return;
             }
         }

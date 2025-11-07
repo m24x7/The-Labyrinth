@@ -24,19 +24,19 @@ namespace GDD3400.Labyrinth
         [SerializeField] private EnemyActions Actions;
         #endregion
 
-        #region Movement Settings
-        [SerializeField] public float _TurnRate = 10f;
-        [SerializeField] public float _MaxSpeed = 5f;
-        [SerializeField] public float _SightDistance = 25f;
+        //#region Movement Settings
+        //[SerializeField] public float _TurnRate = 10f;
+        //[SerializeField] public float _MaxSpeed = 5f;
+        //[SerializeField] public float _SightDistance = 25f;
 
-        [SerializeField] public float _StoppingDistance = 1.5f;
+        //[SerializeField] public float _StoppingDistance = 1.5f;
 
-        [Tooltip("The distance to the destination before we start leaving the path")]
-        [SerializeField] public float _LeavingPathDistance = 2f; // This should not be less than 1
+        //[Tooltip("The distance to the destination before we start leaving the path")]
+        //[SerializeField] public float _LeavingPathDistance = 2f; // This should not be less than 1
 
-        [Tooltip("The minimum distance to the destination before we start using the pathfinder")]
-        [SerializeField] public float _MinimumPathDistance = 6f;
-        #endregion
+        //[Tooltip("The minimum distance to the destination before we start using the pathfinder")]
+        //[SerializeField] public float _MinimumPathDistance = 6f;
+        //#endregion
 
         #region Movement Vars
         [SerializeField] private Vector3 _velocity;
@@ -114,10 +114,9 @@ namespace GDD3400.Labyrinth
 
             Debug.DrawLine(this.transform.position, _floatingTarget, Color.green);
 
-            _velocity = Movement.GetNewAgentVelocity(_floatingTarget, _StoppingDistance, _velocity,
-                _MaxSpeed);
+            _velocity = Movement.GetNewAgentVelocity(_floatingTarget, _velocity);
             //Debug.Log($"Agent Velocity: {_velocity}");
-            if (_velocity != Vector3.zero) Movement.RotateAgent(_velocity, _TurnRate);
+            if (_velocity != Vector3.zero) Movement.RotateAgent(_velocity);
 
             _rb.linearVelocity = _velocity;
         }
@@ -131,7 +130,7 @@ namespace GDD3400.Labyrinth
         /// <param name="destination"></param>
         public void SetDestinationTarget(Vector3 destination)
         {
-            Movement.SetDestinationTarget(_path, destination, _MinimumPathDistance, _levelManager,
+            Movement.SetDestinationTarget(_path, destination, _levelManager,
                 out Vector3 destTarget, out Vector3 floatTarget, out List<PathNode> newPath);
 
             _destinationTarget = destTarget;
