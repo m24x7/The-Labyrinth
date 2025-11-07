@@ -18,9 +18,9 @@ namespace GDD3400.Labyrinth
         // Update is called once per frame
         void Update()
         {
-            //if (pathFollowingInProgress)
+            if (pathFollowingInProgress)
             {
-                PathFollowing(agent.Path, agent.DestinationTarget, agent.Movement, out Vector3 newTarget);
+                PathFollowing(agent.Path, agent.DestinationTarget, agent.GetMovement, out Vector3 newTarget);
                 agent.FloatingTarget = newTarget;
             }
         }
@@ -32,14 +32,14 @@ namespace GDD3400.Labyrinth
 
         public void ChasePlayer()
         {
-            if (agent.Perception.visibleTargets.Count != 0) agent.SetDestinationTarget(agent.Perception.visibleTargets[0].root.position);
+            if (agent.GetPerception.visibleTargets.Count != 0) agent.SetDestinationTarget(agent.GetDecision.chaseTarget.transform.root.position);
 
             pathFollowingInProgress = true;
         }
 
         public void InvestigateNoise()
         {
-            agent.SetDestinationTarget(agent.Perception.heardNoisePos);
+            agent.SetDestinationTarget(agent.GetPerception.heardNoisePos);
 
             pathFollowingInProgress = true;
         }

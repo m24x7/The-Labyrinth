@@ -23,10 +23,9 @@ namespace  GDD3400.Labyrinth
         private Rigidbody _rigidbody;
         private CharacterController charController;
         private InputAction _moveAction;
-        //private InputAction _dashAction;
-        private InputAction sprintAction;
-        private InputAction sneakAction;
-        private InputAction useDistractionAction;
+        private InputAction sprintAction; //Left Shift
+        private InputAction sneakAction; // C
+        private InputAction useDistractionAction; // Left Mouse Button
         private Vector3 _moveVector;
         private Vector2 look;
 
@@ -37,6 +36,7 @@ namespace  GDD3400.Labyrinth
         private float curMoveSpeed;
 
         private bool isSneaking;
+        public bool IsSneaking => isSneaking;
 
         //private bool canUseDistractionItem = true;
         [SerializeField] private GameObject distractionItemPrefab;
@@ -57,8 +57,8 @@ namespace  GDD3400.Labyrinth
         [SerializeField] private float curFootStepInterval = 0;
 
         [SerializeField] private const float FootStepRangeSneak = 2f;
-        [SerializeField] private const float FootStepRangeWalk = 5f;
-        [SerializeField] private const float FootStepRangeSprint = 8f;
+        [SerializeField] private const float FootStepRangeWalk = 7f;
+        [SerializeField] private const float FootStepRangeSprint = 10f;
         [SerializeField] private float footStepRange;
         //private Action soundPlayed;
         private Coroutine notifyAgentsOfSound;

@@ -68,6 +68,17 @@ namespace GDD3400.Labyrinth
             if (Vector3.Angle(transform.forward, dirToTarget) < viewAngle / 2)
             {
                 float distToTarget = Vector3.Distance(transform.position, target.position);
+
+                // Check if the target is sneaking
+                if (target.root.GetComponent<PlayerController>() != null)
+                {
+                    if (target.root.GetComponent<PlayerController>().IsSneaking)
+                    {
+                        // If sneaking, reduce detection distance by half
+                        if (distToTarget >= viewRadius * 0.5f) return false;
+                    }
+                }
+
                 if (!Physics.Raycast(transform.position, dirToTarget, distToTarget, foVObstacleMask))
                 {
                     return true;

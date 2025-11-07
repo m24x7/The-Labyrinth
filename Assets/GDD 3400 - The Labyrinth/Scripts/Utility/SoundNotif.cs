@@ -55,16 +55,20 @@ namespace GDD3400.Labyrinth
 
         public static bool TryNotifyAgentsOfSound(List<GameObject> objects, Transform soundPosition)
         {
+            //Debug.Log("Notifying Agents of Sound");
             bool notifiedAtLeastOne = false;
             foreach (GameObject obj in objects)
             {
+                //Debug.Log("Notifying Object: " + obj.name);
                 EnemyAgent agent = obj.GetComponent<EnemyAgent>();
                 if (agent != null)
                 {
-                    agent.Perception.SetHeardNoise(soundPosition.position);
+                    agent.GetPerception.SetHeardNoise(soundPosition.position);
                     notifiedAtLeastOne = true;
+                    //Debug.Log("Notified Agent of Sound");
                 }
             }
+
             return notifiedAtLeastOne;
         }
     }

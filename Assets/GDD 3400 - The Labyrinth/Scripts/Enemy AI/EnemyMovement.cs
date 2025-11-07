@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEditor.Experimental.GraphView.GraphView;
 
 namespace GDD3400.Labyrinth
 {
@@ -22,18 +23,10 @@ namespace GDD3400.Labyrinth
 
         [Tooltip("The minimum distance to the destination before we start using the pathfinder")]
         [SerializeField] public float _MinimumPathDistance = 4f;
+
+        [SerializeField] private Collider agentCollider;
         #endregion
 
-        //#region Movement Vars
-        //[SerializeField] private Vector3 _velocity;
-        //public Vector3 Velocity => _velocity;
-        //[SerializeField] private Vector3 _floatingTarget;
-        //public Vector3 FloatingTarget { get => _floatingTarget; set => _floatingTarget = value; }
-        //[SerializeField] private Vector3 _destinationTarget;
-        //public Vector3 DestinationTarget => _destinationTarget;
-        //List<PathNode> _path;
-        //public List<PathNode> Path => _path;
-        //#endregion
         private void FixedUpdate()
         {
             // Reset angular velocity to prevent physics interference
@@ -132,7 +125,7 @@ namespace GDD3400.Labyrinth
 
                 if (!Physics.Linecast(lastAddedNode.transform.position + Vector3.up,
                     currentNode.transform.position + Vector3.up,
-                    LayerMask.NameToLayer("Walls"),
+                    LayerMask.GetMask("Walls"),
                     QueryTriggerInteraction.Ignore))
                 {
                     smoothedPath.Add(curPath[currentIndex - 1]);
@@ -199,7 +192,9 @@ namespace GDD3400.Labyrinth
                 Vector3 direction = (_floatingTarget - transform.position).normalized;
 
                 // Calculate the movement vector
-                return curVelocity = direction * _MaxSpeed;
+                curVelocity = (direction + WallAvoidanceBehavior()).normalized * _MaxSpeed;
+
+                return curVelocity;
             }
 
             // If we are close enough to the floating target, slow down or stop
@@ -216,9 +211,29 @@ namespace GDD3400.Labyrinth
             }
         }
 
-        private Vector3 WallAvoidanceBehavior()
+        public Vector3 WallAvoidanceBehavior(float minWallDist = 1f)
         {
-            return Vector3.zero;
+            var center = agentCollider.bounds.center;
+            var nearby = Physics.OverlapSphere(center, minWallDist, LayerMask.NameToLayer("Walls"), QueryTriggerInteraction.Ignore);
+            if (nearby.Length == 0) return Vector3.zero;
+
+            Vector3 totalOffset = Vector3.zero;
+
+            foreach (var col in nearby)
+            {
+                Vector3 closestPoint = col.ClosestPoint(center);
+                Vector3 awayFromWall = center - closestPoint;
+                float dist = awayFromWall.magnitude;
+                if (dist < minWallDist)
+                {
+                    float gain = (1f - (dist / minWallDist));
+                    totalOffset += awayFromWall.normalized * (gain * (minWallDist - dist));
+                }
+            }
+
+            //if (totalOffset.sqrMagnitude > 0f) totalOffset = Vector3.ClampMagnitude(totalOffset, 0.25f);
+
+            return totalOffset;
         }
 
         /// <summary>
@@ -241,6 +256,17 @@ namespace GDD3400.Labyrinth
                 // Smoothly rotate towards the target rotation based on the turn rate
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _TurnRate);
             }
+        }
+
+        public void FaceTowards(Vector3 targetPos)
+        {
+            Vector3 direction = targetPos - transform.position;
+            direction.y = 0; // Keep only the horizontal direction
+
+            if (direction.sqrMagnitude < 0.01f) return; // Avoid zero-length direction
+
+            Quaternion targetRotation = Quaternion.LookRotation(direction, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRotation, _TurnRate);
         }
         #endregion
     }

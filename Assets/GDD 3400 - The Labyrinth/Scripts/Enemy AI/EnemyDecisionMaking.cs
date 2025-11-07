@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using UnityEditor.VersionControl;
 using UnityEngine;
 
 namespace GDD3400.Labyrinth
@@ -53,36 +54,36 @@ namespace GDD3400.Labyrinth
 
         public EnemyState enemyState = EnemyState.Idle;
 
-        private EnemyPerception enemyPerception;
-        private EnemyActions enemyActions;
+        private EnemyAgent enemyAgent;
 
         private Action idle;
         private Action chase;
         private Action investigate;
 
         private float chaseTimer = 0f;
-        private const float maxChaseTime = 5f;
+        private const float maxChaseTime = 10f;
+        public GameObject chaseTarget;
 
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
-            enemyActions = GetComponent<EnemyActions>();
-            enemyPerception = GetComponent<EnemyPerception>();
+            enemyAgent = GetComponent<EnemyAgent>();
 
-            idle += () => enemyActions.Idle();
+            idle += () => enemyAgent.GetActions.Idle();
 
-            chase += () => enemyActions.ChasePlayer();
+            chase += () => enemyAgent.GetActions.ChasePlayer();
 
-            investigate = () => enemyActions.InvestigateNoise();
+            investigate = () => enemyAgent.GetActions.InvestigateNoise();
         }
 
         // Update is called once per frame
         void Update()
         {
-            if (chaseTimer != 0)
+            if (chaseTimer > 0)
             {
                 chaseTimer -= Time.deltaTime;
             }
+            else chaseTarget = null;
         }
 
         /// <summary>
@@ -92,7 +93,7 @@ namespace GDD3400.Labyrinth
         public void DetermineEnemyState(List<Transform> visibleTargets, Vector3 heardNoisePos, Vector3 targetPos)
         {
             CheckVisibleTargets(visibleTargets);
-            CheckHeardNoise(enemyPerception.heardNoise);
+            CheckHeardNoise(enemyAgent.GetPerception.heardNoise);
             CheckAtTargetPosition(targetPos);
             VisitedNoisePosition(heardNoisePos);
 
@@ -100,7 +101,8 @@ namespace GDD3400.Labyrinth
             if (canSeePlayer || chaseTimer > 0f) 
             {
                 if (canSeePlayer) chaseTimer = maxChaseTime;
-                Debug.Log("Can See Player - Switching to Chase State");
+                if (chaseTarget == null) chaseTarget = visibleTargets[0].gameObject;
+                //Debug.Log("Can See Player - Switching to Chase State");
                 enemyState = EnemyState.Chase;
                 return;
             }
@@ -109,12 +111,12 @@ namespace GDD3400.Labyrinth
             if (visitedHeardNoisePosition)
             {
                 heardNoise = false;
-                enemyPerception.heardNoise = false;
+                enemyAgent.GetPerception.heardNoise = false;
                 visitedHeardNoisePosition = false;
             }
             if (heardNoise && Vector3.Distance(heardNoisePos, transform.position) > 1f)
             {
-                Debug.Log("Heard Noise - Switching to Investigate State");
+                //Debug.Log("Heard Noise - Switching to Investigate State");
                 enemyState = EnemyState.Investigate;
                 return;
             }
@@ -122,7 +124,7 @@ namespace GDD3400.Labyrinth
             // Priority 3: If the enemy is at the last known target position, switch to Idle state
             if (isAtTargetPosition)
             {
-                Debug.Log("At Last Known Position - Switching to Idle State");
+                //Debug.Log("At Last Known Position - Switching to Idle State");
                 enemyState = EnemyState.Idle;
                 return;
             }
@@ -130,7 +132,7 @@ namespace GDD3400.Labyrinth
             
 
             // Default: Switch to Idle state
-            Debug.Log("No Stimuli - Switching to Idle State");
+            //Debug.Log("No Stimuli - Switching to Idle State");
             enemyState = EnemyState.Idle;
         }
 

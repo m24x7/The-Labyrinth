@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Floor
   - Colectables
+  - Collectable
+  - Enemy
   layers:
   - Default
   - TransparentFX
@@ -17,7 +19,7 @@ TagManager:
   - Obstacles
   - Enemy
   - Walls
-  - 
+  - Throwable
   - 
   - 
   - 

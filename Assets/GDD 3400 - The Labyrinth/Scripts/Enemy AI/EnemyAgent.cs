@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 namespace GDD3400.Labyrinth
 {
@@ -18,10 +19,14 @@ namespace GDD3400.Labyrinth
         }
 
         #region Scripts
-        [SerializeField] public EnemyMovement Movement;
-        [SerializeField] public EnemyPerception Perception;
+        [SerializeField] private EnemyMovement Movement;
+        public EnemyMovement GetMovement => Movement;
+        [SerializeField] private EnemyPerception Perception;
+        public EnemyPerception GetPerception => Perception;
         [SerializeField] private EnemyDecisionMaking Decision;
+        public EnemyDecisionMaking GetDecision => Decision;
         [SerializeField] private EnemyActions Actions;
+        public EnemyActions GetActions => Actions;
         #endregion
 
         //#region Movement Settings
@@ -78,6 +83,7 @@ namespace GDD3400.Labyrinth
             Movement = GetComponent<EnemyMovement>();
             Perception = GetComponent<EnemyPerception>();
             Decision = GetComponent<EnemyDecisionMaking>();
+            Actions = GetComponent<EnemyActions>();
 
             // Grab and store the wall layer
             _wallLayer = LayerMask.GetMask("Walls");
@@ -148,13 +154,19 @@ namespace GDD3400.Labyrinth
             if (!_isActive) return;
 
 
-            Debug.DrawLine(this.transform.position, _floatingTarget, Color.green);
+            Debug.DrawLine(transform.position, _floatingTarget, Color.green);
 
             _velocity = Movement.GetNewAgentVelocity(_floatingTarget, _velocity);
+
             //Debug.Log($"Agent Velocity: {_velocity}");
-            if (_velocity != Vector3.zero) Movement.RotateAgent(_velocity);
+            //if (_velocity != Vector3.zero) Movement.RotateAgent(_velocity);
+            Movement.FaceTowards(_floatingTarget);
+            //_rb.MovePosition(Movement.WallAvoidanceBehavior());
 
             _rb.linearVelocity = _velocity;
+
+            // Reset angular velocity to prevent physics interference
+            if (GetComponent<Rigidbody>() != null) GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
         }
         #endregion
 
@@ -176,5 +188,13 @@ namespace GDD3400.Labyrinth
             if (newPath != null) _path = newPath;
         }
         #endregion
+
+        private void OnCollisionEnter(Collision collision)
+        {
+            if (collision.gameObject.layer == LayerMask.NameToLayer("Player"))
+            {
+                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            }
+        }
     }
 }
