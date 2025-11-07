@@ -56,6 +56,16 @@ namespace GDD3400.Labyrinth
 
         private LayerMask _wallLayer;
 
+        [SerializeField] private AudioClip[] alertClip = new AudioClip[1];
+        [SerializeField] private float alertTimerMax = 5f;
+        [SerializeField] private float alertTimerMin = 2f;
+        [SerializeField] private float alertTimer = 0f;
+
+        [SerializeField] private AudioClip[] investigateClip = new AudioClip[1];
+        [SerializeField] private float InvestigateTimerMax = 5f;
+        [SerializeField] private float InvestigateTimerMin = 2f;
+        [SerializeField] private float InvestigateTimer = 0f;
+
         private bool DEBUG_SHOW_PATH = true;
 
 
@@ -97,6 +107,32 @@ namespace GDD3400.Labyrinth
             if (!_isActive) return;
 
             DecisionMaking();
+
+            if (Decision.enemyState == EnemyState.Chase)
+            {
+                if (alertTimer <= 0f)
+                {
+                    AudioSource.PlayClipAtPoint(alertClip[Random.Range(0, alertClip.Length)], transform.position);
+                    alertTimer = Random.Range(alertTimerMin, alertTimerMax);
+                }
+                else
+                {
+                    alertTimer -= Time.deltaTime;
+                }
+            }
+
+            if (Decision.enemyState == EnemyState.Investigate)
+            {
+                if (InvestigateTimer <= 0f)
+                {
+                    AudioSource.PlayClipAtPoint(investigateClip[Random.Range(0, investigateClip.Length)], transform.position);
+                    InvestigateTimer = Random.Range(InvestigateTimerMin, InvestigateTimerMax);
+                }
+                else
+                {
+                    InvestigateTimer -= Time.deltaTime;
+                }
+            }
         }
 
         private void DecisionMaking()

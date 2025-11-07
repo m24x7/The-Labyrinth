@@ -334,6 +334,16 @@ MonoBehaviour:
   _floatingTarget: {x: 0, y: 0, z: 0}
   _destinationTarget: {x: 0, y: 0, z: 0}
   agentCollider: {fileID: 8712299663297884815}
+  alertClip:
+  - {fileID: 8300000, guid: 7484582a09e9d0b43acebe6d6a83abff, type: 3}
+  alertTimerMax: 5
+  alertTimerMin: 2
+  alertTimer: 0
+  investigateClip:
+  - {fileID: 8300000, guid: d800e4ebcf095c24b86403a118f26eea, type: 3}
+  InvestigateTimerMax: 5
+  InvestigateTimerMin: 2
+  InvestigateTimer: 0
 --- !u!114 &5424826193532243022
 MonoBehaviour:
   m_ObjectHideFlags: 0
