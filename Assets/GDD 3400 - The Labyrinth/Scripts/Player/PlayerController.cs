@@ -19,6 +19,7 @@ namespace  GDD3400.Labyrinth
         [Header("Connections")]
         [SerializeField] private Transform _GraphicsRoot;
         private Rigidbody _rigidbody;
+        private CharacterController charController;
         private InputAction _moveAction;
         //private InputAction _dashAction;
         private InputAction sprintAction;
@@ -34,6 +35,9 @@ namespace  GDD3400.Labyrinth
         private float curMoveSpeed;
 
         private bool isSneaking;
+
+        //private bool canUseDistractionItem = true;
+        [SerializeField] private GameObject distractionItemPrefab;
 
         #region Audio Variables
         [SerializeField] private GameObject SoundObjectPrefab;
@@ -77,6 +81,12 @@ namespace  GDD3400.Labyrinth
             {
                 mainCamera = GameObject.FindGameObjectWithTag("MainCamera");
             }
+
+            // Get the Character Controller component
+            if (charController == null)
+            {
+                charController = GetComponent<CharacterController>();
+            }
         }
 
         private void Start()
@@ -93,7 +103,7 @@ namespace  GDD3400.Labyrinth
             _moveVector.z = _moveAction.ReadValue<Vector2>().y;
 
             // Face the player toward the movement direction
-            if (_moveVector.magnitude > 0f) transform.forward = Vector3.Lerp(transform.forward, _moveVector, 0.2f);
+            //if (_moveVector.magnitude > 0f) transform.forward = Vector3.Lerp(transform.forward, _moveVector, 0.2f);
 
             // If sprint is held down, enable sprinting
             if (sprintAction.IsPressed())
@@ -113,10 +123,20 @@ namespace  GDD3400.Labyrinth
             else isSneaking = false;
 
             SetFootstepInterval();
+
+            // Handle distraction item usage
+            if (useDistractionAction.WasPressedThisFrame())
+            {
+                GameObject temp = Instantiate<GameObject>(distractionItemPrefab, transform.position, transform.rotation);
+                temp.GetComponent<ThrowItem>().InitializeThrownItem(mainCamera.transform.forward, 10f);
+            }
         }
 
         private void FixedUpdate()
         {
+            // Reset angular velocity to prevent physics interference
+            if (GetComponent<Rigidbody>() != null) GetComponent<Rigidbody>().angularVelocity = Vector3.zero;
+
             if (_moveVector.magnitude != 0)
             {
                 // Determine current move speed based on sprinting/sneaking state
@@ -125,9 +145,9 @@ namespace  GDD3400.Labyrinth
                 else if (isSneaking) curMoveSpeed = BaseMoveSpeed * 0.5f;
 
                 // Apply the movement force
-                _rigidbody.AddForce(_moveVector * curMoveSpeed * 4f, ForceMode.Force);
+                //_rigidbody.AddForce((_moveVector.x * transform.right + _moveVector.z * transform.forward) * curMoveSpeed * 4f, ForceMode.Force);
+                charController.Move((_moveVector.x * mainCamera.transform.right + _moveVector.z * mainCamera.transform.forward).normalized * curMoveSpeed * Time.fixedDeltaTime);
 
-                
                 if (curFootStepInterval <= 0f)
                 {
                     //soundPlayed.Invoke();
